@@ -2,36 +2,36 @@ const User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
-// 🔹 Password validation function
+// Password validation function
 const validatePassword = (password) => {
   // Minimum 8 characters, at least one uppercase, one lowercase, one number, and one special character
   const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   return regex.test(password);
 };
 
-// 🔹 Create user (signup)
+// Create user (signup)
 exports.createUser = async (userData) => {
-  // 1️⃣ Check if user already exists
+  // Check if user already exists
   const existingUser = await User.findOne({ email: userData.email });
   if (existingUser) {
-    throw new Error('Email already in use');
+    throw new Error('user already in use');
   }
 
-  // 2️⃣ Validate password
+  // Validate password
   if (!validatePassword(userData.password)) {
     throw new Error('Password must be at least 8 characters, include uppercase, lowercase, number, and special character.');
   }
 
-  // 3️⃣ Hash password
+  //  Hash password
   const hashedPassword = await bcrypt.hash(userData.password, 12);
 
-  // 4️⃣ Create user
+  //  Create user
   const newUser = await User.create({
     ...userData,
     password: hashedPassword
   });
 
-  // 5️⃣ Remove password before returning
+  // Remove password before returning
   newUser.password = undefined;
   return newUser;
 };
@@ -48,7 +48,7 @@ exports.checkUserCredentials = async (email, password) => {
   return user;
 };
 
-// 🔹 Generate reset token (forgot password)
+// Generate reset token (forgot password)
 exports.generatePasswordResetToken = async (email) => {
   const user = await User.findOne({ email });
   if (!user) {
@@ -63,7 +63,7 @@ exports.generatePasswordResetToken = async (email) => {
   return resetToken;
 };
 
-// 🔹 Reset password
+// Reset password
 exports.resetPassword = async (token, newPassword) => {
   const user = await User.findOne({
     resetToken: token,
