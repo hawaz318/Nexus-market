@@ -1,4 +1,4 @@
-const User = require('../models/user.model');
+const userService = require('../services/user.service');
 const jwt = require('jsonwebtoken');
 
 // 🔹 Generate JWT
@@ -11,12 +11,7 @@ const signToken = (id) => {
 // 🔹 Signup
 exports.signup = async (req, res, next) => {
   try {
-    const newUser = await User.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-      role: req.body.role
-    });
+    const newUser = await userService.createUser(req.body);
 
     const token = signToken(newUser._id);
 
@@ -35,18 +30,11 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Check email & password exist
     if (!email || !password) {
       return res.status(400).json({ status: 'error', message: 'Please provide email and password!' });
     }
 
-    // 2. Check user exists & password is correct
-    const user = await User.findOne({ email }).select('+password');
-    if (!user || !(await user.correctPassword(password, user.password))) {
-      return res.status(401).json({ status: 'error', message: 'Incorrect email or password' });
-    }
-
-    // 3. Generate token
+    const user = await userService.checkUserCredentials(email, password);
     const token = signToken(user._id);
 
     res.status(200).json({
@@ -55,6 +43,44 @@ exports.login = async (req, res, next) => {
       data: { user }
     });
   } catch (err) {
+    res.status(401).json({ status: 'error', message: err.message });
+  }
+};
+
+// 🔹 Forgot Password
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const resetToken = await userService.generatePasswordResetToken(email);
+
+    const resetURL = resetToken
+      ? `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`
+      : null;
+
+    res.status(200).json({
+      status: 'success',
+      message: 'If email exists, a reset link has been sent.',
+      resetURL // for dev/testing, send link here
+    });
+  } catch (err) {
     next(err);
+  }
+};
+
+// 🔹 Reset Password
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await userService.resetPassword(token, password);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password reset successful',
+      data: { user }
+    });
+  } catch (err) {
+    res.status(400).json({ status: 'error', message: err.message });
   }
 };
