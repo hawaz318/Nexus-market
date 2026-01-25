@@ -4,13 +4,10 @@ const authMiddleware = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
-// All routes below this line are PROTECTED
-router.use(authMiddleware.protect);
-
-// Only a user with the 'vendor' role can create a store
 router.post(
-  '/setup', 
-  authMiddleware.restrictTo('vendor'), 
+  '/my-store',
+  authMiddleware.protect,
+  authMiddleware.restrictTo('vendor'),
   storeController.setupMyStore
 );
 
