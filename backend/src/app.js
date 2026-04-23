@@ -24,6 +24,7 @@ app.use('/api/v1/orders', orderRouter);
 app.use('/api/v1/categories', categoryRouter);
 app.use('/api/v1/reviews', reviewRouter);
 
+
 console.log({
   userRouter: typeof userRouter,
   storeRouter: typeof storeRouter,
