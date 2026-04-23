@@ -36,6 +36,22 @@ exports.createUser = async (userData) => {
   return newUser;
 };
 
+exports.loginUser = async (email, password) => {
+  // 1. Check if email and password exist
+  if (!email || !password) {
+    throw new Error('Please provide email and password');
+  }
+
+  // 2. Find user & explicitly select password (because it's hidden by default)
+  const user = await User.findOne({ email }).select('+password');
+
+  // 3. Check if user exists and password is correct
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    throw new Error('Incorrect email or password');
+  }
+
+  return user;
+};
 // 🔹 Check login credentials
 exports.checkUserCredentials = async (email, password) => {
   const user = await User.findOne({ email }).select('+password');

@@ -1,4 +1,5 @@
 const multer = require('multer');
+const { storage } = require('../services/cloudinary.services');
 
 // Store image in memory temporarily before sending to Cloudinary
 const storage = multer.memoryStorage();
